@@ -14,16 +14,19 @@
 using namespace std;
 
 struct myStruct{
-    string word;
-    bool known;
-    int dist;
-    myStruct *path;
+    string word;  // Stores the actual word
+    bool known;   // Tracks whether the word has been explored in the graph
+    int dist;     // Distance from the start word
+    myStruct *path;  // Pointer to previous node in the path for backtracking
 };
+
+// Checks if two words can be transformed into each other with one simple edit
 bool check(string a, string b)
 {
-    int counter=0;
+    int counter=0;  // Counts the number of differing characters
     if (a.length()==b.length())
     {
+        // Check for one character substitution
         for (int i =0; i<a.length(); i++)
         {
             if (a[i]!=b[i])
@@ -32,61 +35,43 @@ bool check(string a, string b)
             }
         }
     }
-    else if (a.length()==b.length()+1)
+    else if (a.length()==b.length()+1 || a.length()+1==b.length())
     {
-        for (int u = 0; u<a.length(); u++)
+        // Check for one character insertion or deletion by comparing substrings
+        for (int u = 0; u<max(a.length(), b.length()); u++)
         {
             string mystr="";
-            for (int y=0; y<a.length(); y++)
+            for (int y=0; y<max(a.length(), b.length()); y++)
             {
                 if (u!=y)
                 {
-                    mystr=mystr+a[y];
+                    mystr += (y < a.length() ? a[y] : b[y]);  // Construct substring without the u-th character
                 }
             }
-            if (mystr==b)
+            if (mystr == (a.length() > b.length() ? b : a))
             {
                 return true;
             }
         }
     }
-    else if (a.length()+1==b.length())
-    {
-        for (int u = 0; u<b.length(); u++)
-        {
-            string mystr="";
-            for (int y=0; y<b.length(); y++)
-            {
-                if (u!=y)
-                {
-                    mystr=mystr+b[y];
-                }
-            }
-            if (mystr==a)
-            {
-                return true;
-            }
-        }
-    }
-    if (counter==1)
-    {
-        return true;
-    }
-    return false;
-    
+    return counter==1;  // Return true if exactly one substitution
 }
 
+// Sets initial distances and explores all connections in the word graph
 void distanceBuilder(vector<myStruct*> vec, string myword)
 {
     myStruct *temp;
+    // Find the start word in the vector and initialize
     for (int i = 0; i<vec.size(); i++)
     {
         if (vec[i]->word == myword)
         {
             temp = vec[i];
+            temp->dist = 0;  // Set distance from start word to itself as 0
         }
     }
-    temp->dist = 0;
+
+    // Using a breadth-first search approach to explore all connections
     for (int currDist=0; currDist<vec.size(); currDist++)
     {
         for (int y = 0; y<vec.size(); y++)
@@ -101,15 +86,16 @@ void distanceBuilder(vector<myStruct*> vec, string myword)
                         if (vec[a]->dist==-1)
                         {
                             vec[a]->dist = currDist+1;
-                            vec[a]->path = vec[y];
+                            vec[a]->path = vec[y];  // Set path for backtracking
                         }
                     }
                 }
-                
             }
         }
     }
 }
+
+// Helper to find a structure by word
 myStruct* finder(vector<myStruct*>vec, string wo)
 {
     for (int i = 0; i<vec.size(); i++)
@@ -121,6 +107,8 @@ myStruct* finder(vector<myStruct*>vec, string wo)
     }
     return NULL;
 }
+
+// Checks if a word exists in the vector
 bool wordFinder(vector<myStruct*>vec, string wo)
 {
     for (int i = 0; i<vec.size(); i++)
@@ -132,6 +120,8 @@ bool wordFinder(vector<myStruct*>vec, string wo)
     }
     return false;
 }
+
+// Resets all nodes for a new search
 void cleaner(vector<myStruct*> vec)
 {
     for (int i = 0; i<vec.size(); i++)
@@ -141,6 +131,8 @@ void cleaner(vector<myStruct*> vec)
         vec[i]->known = false;
     }
 }
+
+// Prints the specific transformation between two words
 void differenceprint(string a, string b)
 {
     if (a.length()==b.length()&&a!=b)
@@ -194,11 +186,14 @@ void differenceprint(string a, string b)
         cout<<a<<endl;
     }
 }
+
+// Main function: sets up and manages the word transformation process
 int main() {
     vector<myStruct *> myVec;
     ifstream file;
     file.open("words.txt");
     string words;
+    // Read words from file and initialize structures
     while(file>>words)
     {
         myStruct *temp = new myStruct;
@@ -213,6 +208,7 @@ int main() {
     while (start[0]!='*')
     {
         stack<string> myStack;
+        // Start the transformation process if both words are found
         if (wordFinder(myVec,start)&&wordFinder(myVec,end))
         {
             distanceBuilder(myVec, start);
@@ -230,7 +226,6 @@ int main() {
                 while (!myStack.empty())
                 {
                     string asd =myStack.top();
-                    //cout<<" "<<asd;
                     differenceprint(mycheckword, asd);
                     mycheckword=asd;
                     myStack.pop();
@@ -250,3 +245,4 @@ int main() {
     
     return 0;
 }
+
